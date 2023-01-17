@@ -1,8 +1,8 @@
 <?php
 require_once 'simple_html_dom.php';
-
-
-allPages("https://agencyanalytics.com");
+$url = $_GET["url"];
+$result = [];
+allPages($url);
 
 
 function allPages($url){
@@ -15,22 +15,24 @@ function allPages($url){
     $dom->load($html);
     $links = $dom->find('a');
     
-    foreach (array_slice($links, 0, 8) as $link) {
-    crawlWebsite("https://agencyanalytics.com".$link->href);
+    foreach (array_slice($links, 0, 8) as $key => $link) {
+        $result[$key] = crawlWebsite($url.$link->href);
      }
 
+     return $result;
 
 }
 
 function crawlWebsite($url)
 {
+
     // code to crawl website goes here
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     $html = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    
 
     $dom = new simple_html_dom();
     $dom->load($html);
@@ -43,8 +45,6 @@ function crawlWebsite($url)
     foreach ($links as $link) {
       
         $href = $link->href;
-       // echo $href;
-        //echo "<br>";
         if (strpos($href, $url) === 0) {
             $internal_links++;
         } else {
@@ -58,7 +58,7 @@ function crawlWebsite($url)
 
     // Extract page loading time
     $loading_time = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
-
+    curl_close($ch);
 
 
     $title = $dom->find("title", 0)->plaintext;
@@ -67,17 +67,19 @@ function crawlWebsite($url)
     $text = $dom->plaintext;
     $word_count = str_word_count($text);
 
-    echo "PageUrl: " . $url . "<br>";
-    echo "PageStatus: " . $httpCode . "<br>";
-    echo "Number of internal links: " . $internal_links . "<br>";
-    echo "Number of external links: " . $external_links . "<br>";
-    echo "Number of images: " . $image_count . "<br>";
-    echo "Page loading time: " . $loading_time . " seconds" . "<br>";
-    echo "Title of the webpage: " . $title . "<br>";
-    echo "Title length: " . $titlelenght. "<br>";
-    echo "Number of words in the webpage: " . $word_count . "<br>";
-    echo "<br>";
-    
+    echo "<tr> " ;   
+    echo "<td> " . $url . "</td>";
+    echo "<td> " . $httpCode . "</td>";
+    echo "<td> " . $internal_links . "</td>";
+    echo "<td> " . $external_links . "</td>";
+    echo "<td> " . $image_count . "</td>";
+    echo "<td> " . number_format($loading_time,2) . " sec" . "</td>";
+    echo "<td> " . $title . "</td>";
+    echo "<td> " . $titlelenght. "</td>";
+    echo "<td> " . $word_count . "</td>";
+    echo "</tr>";
+
+      
 
 
 
